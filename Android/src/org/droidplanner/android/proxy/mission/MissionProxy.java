@@ -833,4 +833,8 @@ public class MissionProxy implements DPMap.PathSource {
         load(mission);
         return true;
     }
+
+    public Mission getCurrentMission(){
+        return currentMission;
+    }
 }

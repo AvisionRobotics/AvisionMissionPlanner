@@ -26,7 +26,10 @@ import com.o3dr.services.android.lib.drone.connection.DroneSharePrefs;
 import com.o3dr.services.android.lib.model.AbstractCommandListener;
 
 import org.droidplanner.android.activities.helpers.BluetoothDevicesActivity;
+import org.droidplanner.android.core.api.App;
+import org.droidplanner.android.core.api.Net;
 import org.droidplanner.android.maps.providers.google_map.tiles.mapbox.offline.MapDownloader;
+import org.droidplanner.android.net.httpurlconnection.HttpUrlConnectionManager;
 import org.droidplanner.android.proxy.mission.MissionProxy;
 import org.droidplanner.android.utils.LogToFileTree;
 import org.droidplanner.android.utils.Utils;
@@ -36,12 +39,14 @@ import org.droidplanner.android.utils.prefs.DroidPlannerPrefs;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.fabric.sdk.android.Fabric;
 import timber.log.Timber;
 
-public class DroidPlannerApp extends MultiDexApplication implements DroneListener, TowerListener {
+public class DroidPlannerApp extends MultiDexApplication implements DroneListener, TowerListener, App {
 
     private static final long DELAY_TO_DISCONNECTION = 1000l; // ms
 
@@ -81,6 +86,9 @@ public class DroidPlannerApp extends MultiDexApplication implements DroneListene
             }
         }
     };
+
+    private Net net;
+    private Executor executor;
 
     @Override
     public void onTowerConnected() {
@@ -142,6 +150,9 @@ public class DroidPlannerApp extends MultiDexApplication implements DroneListene
 
         final Context context = getApplicationContext();
 
+        executor = Executors.newFixedThreadPool(2);
+        net = new HttpUrlConnectionManager(this);
+
         dpPrefs = new DroidPlannerPrefs(context);
         lbm = LocalBroadcastManager.getInstance(context);
         mapDownloader = new MapDownloader(context);
@@ -164,7 +175,7 @@ public class DroidPlannerApp extends MultiDexApplication implements DroneListene
         GAUtils.initGATracker(this);
         GAUtils.startNewSession(context);
 
-        if(BuildConfig.ENABLE_CRASHLYTICS) {
+        if (BuildConfig.ENABLE_CRASHLYTICS) {
             Fabric.with(context, new Crashlytics());
         }
 
@@ -366,7 +377,7 @@ public class DroidPlannerApp extends MultiDexApplication implements DroneListene
 
                     @Override
                     public void onTimeout() {
-                        Timber.w("%s return to me timed out.", isReturnToMeOn ? "Starting": "Stopping");
+                        Timber.w("%s return to me timed out.", isReturnToMeOn ? "Starting" : "Stopping");
                     }
                 });
                 break;
@@ -393,11 +404,11 @@ public class DroidPlannerApp extends MultiDexApplication implements DroneListene
             Log.e(TAG, errorMsg);
     }
 
-    public static void setCellularNetworkAvailability(boolean isAvailable){
+    public static void setCellularNetworkAvailability(boolean isAvailable) {
         isCellularNetworkOn.set(isAvailable);
     }
 
-    public static boolean isCellularNetworkAvailable(){
+    public static boolean isCellularNetworkAvailable() {
         return isCellularNetworkOn.get();
     }
 
@@ -408,8 +419,22 @@ public class DroidPlannerApp extends MultiDexApplication implements DroneListene
     }
 
     public void closeLogFile() {
-        if(logToFileTree != null) {
+        if (logToFileTree != null) {
             logToFileTree.stopLoggingThread();
         }
+    }
+
+    @Override
+    public Net getNet() {
+        return net;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return executor;
+    }
+
+    public static App getApp(Context context) {
+        return (App) context.getApplicationContext();
     }
 }

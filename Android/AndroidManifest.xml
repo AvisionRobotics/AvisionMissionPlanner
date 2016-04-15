@@ -68,19 +68,19 @@
             android:label="@string/account_label"
             android:launchMode="singleTop" />
 
-        <activity
-            android:name=".activities.FlightActivity"
-            android:launchMode="singleTask"
-            android:theme="@style/CustomActionBarTheme.Transparent">
+        <!--<activity-->
+            <!--android:name=".activities.FlightActivity"-->
+            <!--android:launchMode="singleTask"-->
+            <!--android:theme="@style/CustomActionBarTheme.Transparent">-->
 
-            <!-- Launcher Intent -->
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            <!--&lt;!&ndash; Launcher Intent &ndash;&gt;-->
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+                <!--<category android:name="android.intent.category.LAUNCHER" />-->
+            <!--</intent-filter>-->
 
-        </activity>
+        <!--</activity>-->
         <activity
             android:name=".activities.EditorActivity"
             android:label="@string/editor"
@@ -94,6 +94,11 @@
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity

@@ -19,9 +19,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
+//import com.google.gson.Gson;
 import com.o3dr.services.android.lib.coordinate.LatLong;
 import com.o3dr.services.android.lib.drone.attribute.AttributeEvent;
 import com.o3dr.services.android.lib.drone.mission.MissionItemType;
+import com.o3dr.services.android.lib.drone.mission.item.MissionItem;
 
 import org.beyene.sius.unit.length.LengthUnit;
 import org.droidplanner.android.R;
@@ -36,6 +38,7 @@ import org.droidplanner.android.fragments.account.editor.tool.EditorToolsFragmen
 import org.droidplanner.android.fragments.account.editor.tool.EditorToolsImpl;
 import org.droidplanner.android.fragments.helpers.GestureMapFragment;
 import org.droidplanner.android.fragments.helpers.GestureMapFragment.OnPathFinishedListener;
+import org.droidplanner.android.net.model.ServerPoint;
 import org.droidplanner.android.proxy.mission.MissionProxy;
 import org.droidplanner.android.proxy.mission.MissionSelection;
 import org.droidplanner.android.proxy.mission.item.MissionItemProxy;
@@ -45,6 +48,7 @@ import org.droidplanner.android.utils.file.FileStream;
 import org.droidplanner.android.utils.file.IO.MissionReader;
 import org.droidplanner.android.utils.prefs.AutoPanMode;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -83,6 +87,8 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
                 case AttributeEvent.PARAMETERS_REFRESH_COMPLETED:
                 case MissionProxy.ACTION_MISSION_PROXY_UPDATE:
                     updateMissionLength();
+
+                    updateMissionPoints();
                     break;
 
                 case AttributeEvent.MISSION_RECEIVED:
@@ -384,6 +390,22 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
         }
     }
 
+    private void updateMissionPoints() {
+        List<ServerPoint> points = new ArrayList<>();
+
+        if (missionProxy!=null){
+
+
+            for (MissionItem item: missionProxy.getCurrentMission().getMissionItems()){
+                points.add(ServerPoint.toServerModel(item));
+            }
+
+
+//missionProxy.getCurrentMission().getMissionItems();
+//            (new Gson()).toJson(missionProxy.getCurrentMission().getMissionItems())
+        }
+    }
+
     @Override
     public void onMapClick(LatLong point) {
         EditorToolsImpl toolImpl = getToolImpl();
@@ -487,6 +509,10 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
         List<LatLong> points = planningMapFragment.projectPathIntoMap(path);
         EditorToolsImpl toolImpl = getToolImpl();
         toolImpl.onPathFinished(points);
+
+//        Gson gson = new Gson();
+
+
     }
 
     @Override
