@@ -8,7 +8,7 @@ import android.support.annotation.UiThread;
 import android.support.v4.util.ArrayMap;
 import android.util.Log;
 
-//import com.google.gson.Gson;
+import com.google.gson.Gson;
 
 import org.droidplanner.android.net.model.NetError;
 import org.droidplanner.android.utils.IOUtils;
@@ -24,9 +24,10 @@ public abstract class HttpRequest<C> implements Runnable {
 
     protected final static String POST = "POST";
     protected final static String GET = "GET";
-//    protected Gson gson;
+    protected final static String PUT = "PUT";
+    protected Gson gson;
 
-    @StringDef({POST, GET})
+    @StringDef({POST, GET, PUT})
     @interface HttpMethod {
     }
 
@@ -54,7 +55,7 @@ public abstract class HttpRequest<C> implements Runnable {
     public HttpRequest(@NonNull String endpoint) {
         this.endpoint = endpoint;
         mainThreadHandler = new Handler(Looper.getMainLooper());
-//        gson = new Gson();
+        gson = new Gson();
     }
 
     public void setCallback(Callback<C> callback) {
@@ -62,11 +63,33 @@ public abstract class HttpRequest<C> implements Runnable {
     }
 
     protected void executeRequest() {
+//        try {
+//
+//            KeyStore keyStore =...;
+//            String algorithm = TrustManagerFactory.getDefaultAlgorithm();
+//            TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+//
+//            tmf.init(keyStore);
+//
+//            SSLContext context = null;
+//            context = SSLContext.getInstance("TLS");
+//
+//            context.init(null, tmf.getTrustManagers(), null);
+//        } catch (NoSuchAlgorithmException e) {
+//            e.printStackTrace();
+//        } catch (KeyManagementException e) {
+//            e.printStackTrace();
+//        } catch (NoSuchAlgorithmException e) {
+//            e.printStackTrace();
+//        } catch (KeyStoreException e) {
+//            e.printStackTrace();
+//        }
+
         HttpURLConnection urlConnection = null;
         boolean posting = false;
         int statusCode = 0;
         String httpMethod = httpMethod();
-        if (httpMethod.equals(POST)) {
+        if (httpMethod.equals(POST) || httpMethod.equals(PUT)) {
             posting = true;
         }
         try {
@@ -77,7 +100,7 @@ public abstract class HttpRequest<C> implements Runnable {
             urlConnection.setDoOutput(posting);
             urlConnection.setDoInput(true);
             urlConnection.setRequestMethod(httpMethod);
-            setHeaders(urlConnection);
+//            setHeaders(urlConnection);
             if (posting) {
                 OutputStream outputStream = urlConnection.getOutputStream();
                 IOUtils.writeToStream(outputStream, body);

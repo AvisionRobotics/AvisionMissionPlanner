@@ -19,15 +19,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
-//import com.google.gson.Gson;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.Gson;
 import com.o3dr.services.android.lib.coordinate.LatLong;
+import com.o3dr.services.android.lib.coordinate.LatLongAlt;
 import com.o3dr.services.android.lib.drone.attribute.AttributeEvent;
 import com.o3dr.services.android.lib.drone.mission.MissionItemType;
 import com.o3dr.services.android.lib.drone.mission.item.MissionItem;
+import com.o3dr.services.android.lib.drone.mission.item.spatial.BaseSpatialItem;
+import com.o3dr.services.android.lib.drone.mission.item.spatial.Waypoint;
 
 import org.beyene.sius.unit.length.LengthUnit;
+import org.droidplanner.android.DroidPlannerApp;
 import org.droidplanner.android.R;
 import org.droidplanner.android.activities.interfaces.OnEditorInteraction;
+import org.droidplanner.android.core.api.Net;
+import org.droidplanner.android.core.observer.NetSubscriber;
 import org.droidplanner.android.dialogs.SupportEditInputDialog;
 import org.droidplanner.android.dialogs.openfile.OpenFileDialog;
 import org.droidplanner.android.dialogs.openfile.OpenMissionDialog;
@@ -38,6 +45,9 @@ import org.droidplanner.android.fragments.account.editor.tool.EditorToolsFragmen
 import org.droidplanner.android.fragments.account.editor.tool.EditorToolsImpl;
 import org.droidplanner.android.fragments.helpers.GestureMapFragment;
 import org.droidplanner.android.fragments.helpers.GestureMapFragment.OnPathFinishedListener;
+import org.droidplanner.android.net.model.NetError;
+import org.droidplanner.android.net.model.Path;
+import org.droidplanner.android.net.model.RestrictedArea;
 import org.droidplanner.android.net.model.ServerPoint;
 import org.droidplanner.android.proxy.mission.MissionProxy;
 import org.droidplanner.android.proxy.mission.MissionSelection;
@@ -58,7 +68,7 @@ import java.util.List;
 public class EditorActivity extends DrawerNavigationUI implements OnPathFinishedListener,
         EditorToolsFragment.EditorToolListener, MissionDetailFragment.OnMissionDetailListener,
         OnEditorInteraction, MissionSelection.OnSelectionUpdateListener, OnClickListener,
-        OnLongClickListener, SupportEditInputDialog.Listener {
+        OnLongClickListener, SupportEditInputDialog.Listener, NetSubscriber {
 
     private static final double DEFAULT_SPEED = 5; //meters per second.
 
@@ -72,6 +82,8 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
 
     private static final IntentFilter eventFilter = new IntentFilter();
     private static final String MISSION_FILENAME_DIALOG_TAG = "Mission filename";
+
+    private boolean needRebuildPath = true;
 
     static {
         eventFilter.addAction(MissionProxy.ACTION_MISSION_PROXY_UPDATE);
@@ -88,7 +100,9 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
                 case MissionProxy.ACTION_MISSION_PROXY_UPDATE:
                     updateMissionLength();
 
-                    updateMissionPoints();
+                    if (needRebuildPath) {
+                        updateMissionPoints();
+                    }
                     break;
 
                 case AttributeEvent.MISSION_RECEIVED:
@@ -167,6 +181,20 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
 
         gestureMapFragment.setOnPathFinishedListener(this);
         openActionDrawer();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        DroidPlannerApp.getApp(this).getNet().subscribe(this);
+        DroidPlannerApp.getApp(this).getNet().getRestrictedArea(new LatLng(50.44726, 30.50002));
+
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        DroidPlannerApp.getApp(this).getNet().unsubscribe(this);
     }
 
     @Override
@@ -313,7 +341,7 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
             public void waypointFileLoaded(MissionReader reader) {
                 openedMissionFilename = getSelectedFilename();
 
-                if(missionProxy != null) {
+                if (missionProxy != null) {
                     missionProxy.readMissionFromFile(reader);
                     gestureMapFragment.getMapFragment().zoomToFit();
                 }
@@ -393,15 +421,17 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
     private void updateMissionPoints() {
         List<ServerPoint> points = new ArrayList<>();
 
-        if (missionProxy!=null){
+        if (missionProxy != null) {
 
 
-            for (MissionItem item: missionProxy.getCurrentMission().getMissionItems()){
+            for (MissionItem item : missionProxy.getCurrentMission().getMissionItems()) {
                 points.add(ServerPoint.toServerModel(item));
             }
 
+            DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1531948795232780288");
 
-//missionProxy.getCurrentMission().getMissionItems();
+            missionProxy.getCurrentMission().getMissionItems();
+
 //            (new Gson()).toJson(missionProxy.getCurrentMission().getMissionItems())
         }
     }
@@ -459,7 +489,7 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
     }
 
     @Override
-    protected void addToolbarFragment(){
+    protected void addToolbarFragment() {
         final int toolbarId = getToolbarId();
         editorToolsFragment = (EditorToolsFragment) fragmentManager.findFragmentById(toolbarId);
         if (editorToolsFragment == null) {
@@ -509,9 +539,6 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
         List<LatLong> points = planningMapFragment.projectPathIntoMap(path);
         EditorToolsImpl toolImpl = getToolImpl();
         toolImpl.onPathFinished(points);
-
-//        Gson gson = new Gson();
-
 
     }
 
@@ -601,4 +628,85 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
             planningMapFragment.postUpdate();
     }
 
+    @Override
+    public void onNetRequestSuccess(@Net.NetEvent int eventId, Object netObject) {
+        switch (eventId) {
+            case Net.CALCULATE_ROUTE:
+                Path path = (Path) netObject;
+                Toast.makeText(this, String.valueOf(path.getPassedPoints().size()), Toast.LENGTH_LONG).show();
+
+                List<LatLong> points = new ArrayList<>();
+
+                missionProxy.getCurrentMission().clear();
+                for (int i = 0; i < path.getPassedPoints().size(); i++) {
+//                    points.add(new LatLong(path.getPassedPoints().get(i).getLatitude(),
+//                            path.getPassedPoints().get(i).getLongitude()));
+//                    gestureMapFragment.getMapFragment().addFlightPathPoint(new LatLong(path.getPassedPoints().get(i).getLatitude(),
+//                            path.getPassedPoints().get(i).getLongitude()));
+
+                    BaseSpatialItem item = new Waypoint();
+                    item.setCoordinate(new LatLongAlt(path.getPassedPoints().get(i).getLatitude(),
+                            path.getPassedPoints().get(i).getLongitude(), path.getPassedPoints().get(i).getAltitude()));
+                    missionProxy.getCurrentMission().addMissionItem(0, item);
+                }
+
+                missionProxy.clear();
+                for (int i = 0; i < path.getPassedPoints().size(); i++) {
+                    missionProxy.addWaypoint(new LatLong(path.getPassedPoints().get(i).getLatitude(),
+                            path.getPassedPoints().get(i).getLongitude()));
+                }
+                needRebuildPath = false;
+//                gestureMapFragment.getMapFragment().projectPathIntoMap(points);
+//                EditorToolsImpl toolImpl = getToolImpl();
+//                toolImpl.onPathFinished(points);
+
+
+                break;
+            case Net.RESTRICTED_AREA:
+                RestrictedArea area = (RestrictedArea) netObject;
+                Toast.makeText(this, "Restricted area - success!", Toast.LENGTH_LONG).show();
+
+                String s = "{\"restricted\": [\n" +
+                        "  {\n" +
+                        "    \"name\": \"test1\",\n" +
+                        "    \"radius\": 100.0,\n" +
+                        "    \"lat\": 50.45231,\n" +
+                        "    \"lng\": 30.46672,\n" +
+                        "    \"id\": \"1531304378436157440\"\n" +
+                        "  },\n" +
+                        "  {\n" +
+                        "    \"name\": \"test2\",\n" +
+                        "    \"radius\": 100.0,\n" +
+                        "    \"lat\": 50.69994,\n" +
+                        "    \"lng\": 31.39069,\n" +
+                        "    \"id\": \"1531304378447691776\"\n" +
+                        "  }\n" +
+                        "], \"geofencing\": [\n" +
+                        "  {\n" +
+                        "    \"name\": \"test3\",\n" +
+                        "    \"simplePointList\": [],\n" +
+                        "    \"lat\": 50.45231,\n" +
+                        "    \"lng\": 30.46672,\n" +
+                        "    \"id\": \"1531304378450837504\"\n" +
+                        "  }\n" +
+                        "] }";
+
+                Gson gson = new Gson();
+                area = gson.fromJson(s, RestrictedArea.class);
+                gestureMapFragment.getMapFragment().addRestrictedAreas(area);
+                break;
+        }
+    }
+
+    @Override
+    public void onNetRequestError(@Net.NetEvent int eventId, NetError netError) {
+        switch (eventId) {
+            case Net.CALCULATE_ROUTE:
+                needRebuildPath = true;
+                break;
+            case Net.RESTRICTED_AREA:
+                Toast.makeText(this, "Restricted area - error !", Toast.LENGTH_LONG).show();
+                break;
+        }
+    }
 }

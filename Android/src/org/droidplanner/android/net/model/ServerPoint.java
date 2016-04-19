@@ -1,6 +1,6 @@
 package org.droidplanner.android.net.model;
 
-//import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.SerializedName;
 import com.o3dr.services.android.lib.drone.mission.item.MissionItem;
 
 /**
@@ -8,17 +8,17 @@ import com.o3dr.services.android.lib.drone.mission.item.MissionItem;
  */
 public class ServerPoint {
 
-//    @SerializedName("lat")
+    @SerializedName("lat")
     private double latitude;
 
-//    @SerializedName("lng")
+    @SerializedName("lng")
     private double longitude;
 
     private String cn;
     private boolean tf;
-    private boolean cr;
+    private boolean cr = false;
 
-//    @SerializedName("ch")
+    @SerializedName("ch")
     private double altitude;
 
     public static ServerPoint toServerModel(MissionItem missionItem){

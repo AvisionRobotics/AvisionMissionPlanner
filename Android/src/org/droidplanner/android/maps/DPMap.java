@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.droidplanner.android.maps.providers.DPMapProvider;
+import org.droidplanner.android.net.model.RestrictedArea;
 import org.droidplanner.android.utils.prefs.AutoPanMode;
 
 import android.graphics.Color;
@@ -435,5 +436,7 @@ public interface DPMap {
 	void skipMarkerClickEvents(boolean skip);
 
 	void updateRealTimeFootprint(FootPrint footprint);
+
+	void addRestrictedAreas(RestrictedArea area);
     
 }

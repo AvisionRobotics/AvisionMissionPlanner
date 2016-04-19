@@ -41,7 +41,7 @@ dependencies {
     //Charts and graph library
     compile 'com.github.lecho:hellocharts-library:1.5.5@aar'
 
-//    compile 'com.google.code.gson:gson:2.2.+'
+    compile 'com.google.code.gson:gson:2.2.+'
 
 }
 

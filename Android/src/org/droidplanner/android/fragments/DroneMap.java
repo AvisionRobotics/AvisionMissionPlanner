@@ -28,6 +28,7 @@ import org.droidplanner.android.graphic.map.GraphicHome;
 import org.droidplanner.android.maps.DPMap;
 import org.droidplanner.android.maps.MarkerInfo;
 import org.droidplanner.android.maps.providers.DPMapProvider;
+import org.droidplanner.android.net.model.RestrictedArea;
 import org.droidplanner.android.proxy.mission.MissionProxy;
 import org.droidplanner.android.utils.Utils;
 import org.droidplanner.android.utils.prefs.AutoPanMode;
@@ -345,6 +346,14 @@ public abstract class DroneMap extends ApiListenerFragment {
 	 */
 	public void goToDroneLocation() {
 		mMapFragment.goToDroneLocation();
+	}
+
+	public void addRestrictedAreas(RestrictedArea area){
+		mMapFragment.addRestrictedAreas(area);
+	}
+
+	public void addFlightPathPoint(LatLong point){
+		mMapFragment.addFlightPathPoint(point);
 	}
 
 	/**
