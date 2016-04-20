@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.CircularArray;
+import android.util.Log;
 import android.util.Pair;
 
 import com.google.android.gms.analytics.HitBuilders;
@@ -776,6 +777,8 @@ public class MissionProxy implements DPMap.PathSource {
         }
 
         missionItemsList += "]";
+
+        Log.e("MissionItemList", missionItemsList);
 
         HitBuilders.EventBuilder eventBuilder = new HitBuilders.EventBuilder()
                 .setCategory(GAUtils.Category.MISSION_PLANNING)

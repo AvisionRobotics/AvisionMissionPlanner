@@ -431,11 +431,12 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
                 points.add(ServerPoint.toServerModel(item));
             }
 
-            final Drone drone = ((DroidPlannerApp)getApplication()).getDrone();
-            if (!drone.isConnected())
-                return;
+//            final Drone drone = ((DroidPlannerApp)getApplication()).getDrone();
+//            if (!drone.isConnected())
+//                return;
 
-            DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1531948795232780288");
+            DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1532125651346128896");
+            needRebuildPath = false;
 
             missionProxy.getCurrentMission().getMissionItems();
 
