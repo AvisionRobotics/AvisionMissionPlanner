@@ -21,13 +21,16 @@ import android.widget.Toast;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
+import com.o3dr.android.client.Drone;
 import com.o3dr.services.android.lib.coordinate.LatLong;
 import com.o3dr.services.android.lib.coordinate.LatLongAlt;
 import com.o3dr.services.android.lib.drone.attribute.AttributeEvent;
+import com.o3dr.services.android.lib.drone.attribute.AttributeType;
 import com.o3dr.services.android.lib.drone.mission.MissionItemType;
 import com.o3dr.services.android.lib.drone.mission.item.MissionItem;
 import com.o3dr.services.android.lib.drone.mission.item.spatial.BaseSpatialItem;
 import com.o3dr.services.android.lib.drone.mission.item.spatial.Waypoint;
+import com.o3dr.services.android.lib.drone.property.Gps;
 
 import org.beyene.sius.unit.length.LengthUnit;
 import org.droidplanner.android.DroidPlannerApp;
@@ -100,9 +103,9 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
                 case MissionProxy.ACTION_MISSION_PROXY_UPDATE:
                     updateMissionLength();
 
-                    if (needRebuildPath) {
-                        updateMissionPoints();
-                    }
+//                    if (needRebuildPath) {
+//                        updateMissionPoints();
+//                    }
                     break;
 
                 case AttributeEvent.MISSION_RECEIVED:
@@ -427,6 +430,10 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
             for (MissionItem item : missionProxy.getCurrentMission().getMissionItems()) {
                 points.add(ServerPoint.toServerModel(item));
             }
+
+            final Drone drone = ((DroidPlannerApp)getApplication()).getDrone();
+            if (!drone.isConnected())
+                return;
 
             DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1531948795232780288");
 

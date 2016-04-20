@@ -154,40 +154,40 @@ public abstract class DrawerNavigationUI extends SuperUI implements SlidingDrawe
         mNavigationIntent = new Intent(this, EditorActivity.class);
 
 
-//        int id = menuItem.getItemId();
-//
-//        switch (id) {
-//            case R.id.navigation_flight_data:
-//                mNavigationIntent = new Intent(this, FlightActivity.class);
-//                break;
-//
-//            case R.id.navigation_editor:
-//                mNavigationIntent = new Intent(this, EditorActivity.class);
-//                break;
-//
-//            case R.id.navigation_locator:
-//                mNavigationIntent = new Intent(this, LocatorActivity.class);
-//                break;
-//
-//            case R.id.navigation_params:
-//                mNavigationIntent = new Intent(this, ConfigurationActivity.class)
-//                        .putExtra(ConfigurationActivity.EXTRA_CONFIG_SCREEN_ID, id);
-//                break;
-//
-//            case R.id.navigation_checklist:
-//                mNavigationIntent = new Intent(this, ConfigurationActivity.class)
-//                        .putExtra(ConfigurationActivity.EXTRA_CONFIG_SCREEN_ID, id);
-//                break;
-//
-//            case R.id.navigation_calibration:
-//                mNavigationIntent = new Intent(this, ConfigurationActivity.class)
-//                        .putExtra(ConfigurationActivity.EXTRA_CONFIG_SCREEN_ID, id);
-//                break;
-//
-//            case R.id.navigation_settings:
-//                mNavigationIntent = new Intent(this, SettingsActivity.class);
-//                break;
-//        }
+        int id = menuItem.getItemId();
+
+        switch (id) {
+            case R.id.navigation_flight_data:
+                mNavigationIntent = new Intent(this, FlightActivity.class);
+                break;
+
+            case R.id.navigation_editor:
+                mNavigationIntent = new Intent(this, EditorActivity.class);
+                break;
+
+            case R.id.navigation_locator:
+                mNavigationIntent = new Intent(this, LocatorActivity.class);
+                break;
+
+            case R.id.navigation_params:
+                mNavigationIntent = new Intent(this, ConfigurationActivity.class)
+                        .putExtra(ConfigurationActivity.EXTRA_CONFIG_SCREEN_ID, id);
+                break;
+
+            case R.id.navigation_checklist:
+                mNavigationIntent = new Intent(this, ConfigurationActivity.class)
+                        .putExtra(ConfigurationActivity.EXTRA_CONFIG_SCREEN_ID, id);
+                break;
+
+            case R.id.navigation_calibration:
+                mNavigationIntent = new Intent(this, ConfigurationActivity.class)
+                        .putExtra(ConfigurationActivity.EXTRA_CONFIG_SCREEN_ID, id);
+                break;
+
+            case R.id.navigation_settings:
+                mNavigationIntent = new Intent(this, SettingsActivity.class);
+                break;
+        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
