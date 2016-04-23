@@ -14,14 +14,16 @@ import java.util.List;
 
 
 public interface Net extends Subject<NetSubscriber> {
-    @IntDef({LOG_IN, GET_POSTS, CALCULATE_ROUTE, RESTRICTED_AREA})
+
+    @IntDef({CALCULATE_ROUTE, RESTRICTED_AREA, GET_WEATHER_INFO})
     @interface NetEvent {
     }
 
-    int LOG_IN = 102;
-    int GET_POSTS = 202;
-    int CALCULATE_ROUTE = 302;
-    int RESTRICTED_AREA = 402;
+    int LOG_IN = 1;
+    int GET_POSTS = 2;
+    int CALCULATE_ROUTE = 3;
+    int RESTRICTED_AREA = 4;
+    int GET_WEATHER_INFO = 5;
 
     void login(@NonNull User user);
 
@@ -29,5 +31,10 @@ public interface Net extends Subject<NetSubscriber> {
 
     void calculateRoute(@NonNull List<ServerPoint> serverPoints, @NonNull String droneId);
 
+    void calculateRoute(@NonNull List<ServerPoint> serverPoints, @NonNull LatLng latLng);
+
     void getRestrictedArea(LatLng latLng);
+
+    void getWeatherInfo(@NonNull LatLng latLng);
+
 }

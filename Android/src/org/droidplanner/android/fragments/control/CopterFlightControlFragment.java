@@ -1,7 +1,10 @@
 package org.droidplanner.android.fragments.control;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -12,6 +15,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.maps.model.LatLng;
 import com.o3dr.android.client.Drone;
 import com.o3dr.android.client.apis.ControlApi;
 import com.o3dr.android.client.apis.FollowApi;
@@ -19,26 +23,33 @@ import com.o3dr.android.client.apis.VehicleApi;
 import com.o3dr.services.android.lib.drone.attribute.AttributeEvent;
 import com.o3dr.services.android.lib.drone.attribute.AttributeEventExtra;
 import com.o3dr.services.android.lib.drone.attribute.AttributeType;
+import com.o3dr.services.android.lib.drone.property.Gps;
 import com.o3dr.services.android.lib.drone.property.GuidedState;
 import com.o3dr.services.android.lib.drone.property.State;
 import com.o3dr.services.android.lib.drone.property.VehicleMode;
 import com.o3dr.services.android.lib.gcs.follow.FollowState;
 import com.o3dr.services.android.lib.model.SimpleCommandListener;
 
+import org.droidplanner.android.DroidPlannerApp;
 import org.droidplanner.android.R;
 import org.droidplanner.android.activities.helpers.SuperUI;
+import org.droidplanner.android.core.api.Net;
+import org.droidplanner.android.core.observer.NetSubscriber;
 import org.droidplanner.android.dialogs.SlideToUnlockDialog;
 import org.droidplanner.android.dialogs.SupportYesNoDialog;
 import org.droidplanner.android.dialogs.SupportYesNoWithPrefsDialog;
-import org.droidplanner.android.fragments.FlightDataFragment;
+import org.droidplanner.android.net.model.NetError;
+import org.droidplanner.android.net.model.WeatherInfo;
 import org.droidplanner.android.proxy.mission.MissionProxy;
 import org.droidplanner.android.utils.analytics.GAUtils;
 import org.droidplanner.android.utils.prefs.DroidPlannerPrefs;
 
+import java.text.DecimalFormat;
+
 /**
  * Provide functionality for flight action button specific to copters.
  */
-public class CopterFlightControlFragment extends BaseFlightControlFragment implements SupportYesNoDialog.Listener {
+public class CopterFlightControlFragment extends BaseFlightControlFragment implements SupportYesNoDialog.Listener, NetSubscriber {
 
     private static final String ACTION_FLIGHT_ACTION_BUTTON = "Copter flight action button";
 
@@ -150,6 +161,7 @@ public class CopterFlightControlFragment extends BaseFlightControlFragment imple
     private Button autoBtn;
 
     private int orangeColor;
+    private ProgressDialog progressDialog;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -202,6 +214,18 @@ public class CopterFlightControlFragment extends BaseFlightControlFragment imple
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        DroidPlannerApp.getApp(getActivity()).getNet().subscribe(this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        DroidPlannerApp.getApp(getActivity()).getNet().unsubscribe(this);
+    }
+
+    @Override
     public void onApiConnected() {
         super.onApiConnected();
         missionProxy = getMissionProxy();
@@ -231,7 +255,8 @@ public class CopterFlightControlFragment extends BaseFlightControlFragment imple
                 break;
 
             case R.id.mc_armBtn:
-                getArmingConfirmation();
+                fetchWeather();
+//                getArmingConfirmation();
                 eventBuilder.setAction(ACTION_FLIGHT_ACTION_BUTTON).setLabel("Arm");
                 break;
 
@@ -296,6 +321,34 @@ public class CopterFlightControlFragment extends BaseFlightControlFragment imple
             GAUtils.sendEvent(eventBuilder);
         }
 
+    }
+
+    private void fetchWeather() {
+        Drone drone = getDrone();
+        Gps gps = drone.getAttribute(AttributeType.GPS);
+        DroidPlannerApp.getApp(getActivity()).getNet().
+                getWeatherInfo(new LatLng(gps.getPosition().getLatitude(),
+                        gps.getPosition().getLongitude()));
+        showProgressDialog("Fetching Weather Info...");
+    }
+
+    private void showProgressDialog() {
+        showProgressDialog("");
+    }
+
+    private void showProgressDialog(String message) {
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(getActivity());
+        }
+        progressDialog.setTitle("Loading...");
+        progressDialog.setMessage(message);
+        progressDialog.show();
+    }
+
+    private void stopProgressDialog() {
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
     }
 
     private void getDronieConfirmation() {
@@ -484,5 +537,49 @@ public class CopterFlightControlFragment extends BaseFlightControlFragment imple
     @Override
     public void onDialogNo(String dialogTag) {
 
+    }
+
+    @Override
+    public void onNetRequestSuccess(@Net.NetEvent int eventId, Object netObject) {
+        switch (eventId) {
+            case Net.GET_WEATHER_INFO:
+                stopProgressDialog();
+                DecimalFormat format = new DecimalFormat("##.##");
+                final WeatherInfo weatherInfo = (WeatherInfo) netObject;
+
+                StringBuilder builder = new StringBuilder();
+                builder.append("Temperature:").append("\t").append(format.format(weatherInfo.getWeather().getTemperature())).append("\u2103").append("\n");
+                builder.append("Pressure:").append("\t").append(format.format(weatherInfo.getWeather().getPressure())).append("Pa").append("\n");
+                builder.append("Humidity:").append("\t").append(format.format(weatherInfo.getWeather().getHumidity())).append("%").append("\n");
+                builder.append("Wind Speed:").append("\t").append(format.format(weatherInfo.getWeather().getWindSpeed())).append("m/s").append("\n");
+                builder.append("Wind Direction:").append("\t").append(format.format(weatherInfo.getWeather().getWindDirection())).append("\u00b0").append("\n");
+                builder.append("---------------------").append("\n");
+                builder.append("Flight permission:").append("\t").append(weatherInfo.getPermission() ? "Allowed" : "Prohibited");
+
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Weather Info:")
+                        .setMessage(builder.toString())
+                        .setPositiveButton("Got it!", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                if (weatherInfo.getPermission()) {
+                                    getArmingConfirmation();
+                                }
+                                dialogInterface.dismiss();
+                            }
+                        })
+                        .show();
+                break;
+        }
+    }
+
+    @Override
+    public void onNetRequestError(@Net.NetEvent int eventId, NetError netError) {
+        switch (eventId) {
+            case Net.GET_WEATHER_INFO:
+                stopProgressDialog();
+                Toast.makeText(getActivity(), "Weather services are unavailable! We do not recommend to fly.", Toast.LENGTH_LONG).show();
+                break;
+        }
     }
 }

@@ -17,6 +17,7 @@ public class ServerPoint {
     private String cn;
     private boolean tf;
     private boolean cr = false;
+    private boolean rn = false;
 
     @SerializedName("ch")
     private double altitude;

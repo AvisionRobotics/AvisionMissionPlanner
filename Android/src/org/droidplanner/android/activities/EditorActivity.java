@@ -87,11 +87,13 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
     private static final String MISSION_FILENAME_DIALOG_TAG = "Mission filename";
 
     private boolean needRebuildPath = true;
+    private boolean needRestrictedZone = true;
 
     static {
         eventFilter.addAction(MissionProxy.ACTION_MISSION_PROXY_UPDATE);
         eventFilter.addAction(AttributeEvent.MISSION_RECEIVED);
         eventFilter.addAction(AttributeEvent.PARAMETERS_REFRESH_COMPLETED);
+        eventFilter.addAction(AttributeEvent.GPS_POSITION);
     }
 
     private final BroadcastReceiver eventReceiver = new BroadcastReceiver() {
@@ -103,9 +105,21 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
                 case MissionProxy.ACTION_MISSION_PROXY_UPDATE:
                     updateMissionLength();
 
-//                    if (needRebuildPath) {
-//                        updateMissionPoints();
-//                    }
+                    if (needRebuildPath) {
+                        updateMissionPoints();
+                    }
+                    break;
+                case AttributeEvent.GPS_POSITION:
+                    final Drone drone = dpApp.getDrone();
+                    if (drone.isConnected() && needRebuildPath) {
+                        updateMissionPoints();
+                    }
+                    if (drone.isConnected() && needRestrictedZone){
+                        Gps gps = drone.getAttribute(AttributeType.GPS);
+                        DroidPlannerApp.getApp(EditorActivity.this).getNet().
+                                getRestrictedArea(new LatLng(gps.getPosition().getLatitude(),
+                                        gps.getPosition().getLongitude()));
+                    }
                     break;
 
                 case AttributeEvent.MISSION_RECEIVED:
@@ -142,6 +156,8 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
 
     private FloatingActionButton itemDetailToggle;
     private EditorListFragment editorListFragment;
+
+    private LatLng mDroneLocation;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -190,8 +206,6 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
     protected void onStart() {
         super.onStart();
         DroidPlannerApp.getApp(this).getNet().subscribe(this);
-        DroidPlannerApp.getApp(this).getNet().getRestrictedArea(new LatLng(50.44726, 30.50002));
-
     }
 
     @Override
@@ -424,23 +438,33 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
     private void updateMissionPoints() {
         List<ServerPoint> points = new ArrayList<>();
 
-        if (missionProxy != null) {
+        if (missionProxy != null && !missionProxy.getCurrentMission().getMissionItems().isEmpty()) {
 
 
             for (MissionItem item : missionProxy.getCurrentMission().getMissionItems()) {
                 points.add(ServerPoint.toServerModel(item));
             }
 
-//            final Drone drone = ((DroidPlannerApp)getApplication()).getDrone();
-//            if (!drone.isConnected())
-//                return;
+//            mDroneLocation = new LatLng(50.003137, 36.272996);
+            final Drone drone = dpApp.getDrone();
+            if (!drone.isConnected()) {
+                Toast.makeText(this, "In order to calculate route please connect to drone!", Toast.LENGTH_LONG).show();
+                return;
+            }
 
-            DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1532125651346128896");
-            needRebuildPath = false;
+            final Gps droneGps = drone.getAttribute(AttributeType.GPS);
+            if (droneGps != null && droneGps.isValid()) {
+                mDroneLocation = new LatLng(droneGps.getPosition().getLatitude(),
+                        droneGps.getPosition().getLongitude());
+            }
+            if (mDroneLocation != null) {
+                DroidPlannerApp.getApp(this).getNet().calculateRoute(points, mDroneLocation);
+                needRebuildPath = false;
+            } else {
+                Toast.makeText(this, "In order to calculate route please connect to drone!", Toast.LENGTH_LONG).show();
+            }
 
             missionProxy.getCurrentMission().getMissionItems();
-
-//            (new Gson()).toJson(missionProxy.getCurrentMission().getMissionItems())
         }
     }
 
@@ -671,36 +695,38 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
 
                 break;
             case Net.RESTRICTED_AREA:
+                needRestrictedZone = false;
+
                 RestrictedArea area = (RestrictedArea) netObject;
                 Toast.makeText(this, "Restricted area - success!", Toast.LENGTH_LONG).show();
 
-                String s = "{\"restricted\": [\n" +
-                        "  {\n" +
-                        "    \"name\": \"test1\",\n" +
-                        "    \"radius\": 100.0,\n" +
-                        "    \"lat\": 50.45231,\n" +
-                        "    \"lng\": 30.46672,\n" +
-                        "    \"id\": \"1531304378436157440\"\n" +
-                        "  },\n" +
-                        "  {\n" +
-                        "    \"name\": \"test2\",\n" +
-                        "    \"radius\": 100.0,\n" +
-                        "    \"lat\": 50.69994,\n" +
-                        "    \"lng\": 31.39069,\n" +
-                        "    \"id\": \"1531304378447691776\"\n" +
-                        "  }\n" +
-                        "], \"geofencing\": [\n" +
-                        "  {\n" +
-                        "    \"name\": \"test3\",\n" +
-                        "    \"simplePointList\": [],\n" +
-                        "    \"lat\": 50.45231,\n" +
-                        "    \"lng\": 30.46672,\n" +
-                        "    \"id\": \"1531304378450837504\"\n" +
-                        "  }\n" +
-                        "] }";
-
-                Gson gson = new Gson();
-                area = gson.fromJson(s, RestrictedArea.class);
+//                String s = "{\"restricted\": [\n" +
+//                        "  {\n" +
+//                        "    \"name\": \"test1\",\n" +
+//                        "    \"radius\": 100.0,\n" +
+//                        "    \"lat\": 50.45231,\n" +
+//                        "    \"lng\": 30.46672,\n" +
+//                        "    \"id\": \"1531304378436157440\"\n" +
+//                        "  },\n" +
+//                        "  {\n" +
+//                        "    \"name\": \"test2\",\n" +
+//                        "    \"radius\": 100.0,\n" +
+//                        "    \"lat\": 50.69994,\n" +
+//                        "    \"lng\": 31.39069,\n" +
+//                        "    \"id\": \"1531304378447691776\"\n" +
+//                        "  }\n" +
+//                        "], \"geofencing\": [\n" +
+//                        "  {\n" +
+//                        "    \"name\": \"test3\",\n" +
+//                        "    \"simplePointList\": [],\n" +
+//                        "    \"lat\": 50.45231,\n" +
+//                        "    \"lng\": 30.46672,\n" +
+//                        "    \"id\": \"1531304378450837504\"\n" +
+//                        "  }\n" +
+//                        "] }";
+//
+//                Gson gson = new Gson();
+//                area = gson.fromJson(s, RestrictedArea.class);
                 gestureMapFragment.getMapFragment().addRestrictedAreas(area);
                 break;
         }
