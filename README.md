@@ -2,8 +2,6 @@
 
 Avision mission planner is a Ground Control Station (GCS) Android app built atop [Tower](https://github.com/dronekit/dronekit-android) and [3DR Services](https://github.com/DroidPlanner/Tower), for UAVs running Ardupilot software. 
 
-[![Google Play Store](https://developer.android.com/images/brand/en_app_rgb_wo_45.png)](https://play.google.com/store/apps/details?id=org.droidplanner.android)
-
 # Server 
 
 The app is using **Avision mission planner server** for route planning, drone crowd collision avoidance, weather condition warnings etc.  
