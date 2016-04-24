@@ -16,7 +16,7 @@ The app is using **Avision mission planner server** for route planning, drone cr
 ![4] (files/4.jpeg)
 ![5] (files/5.jpeg)
 ![6] (files/6.jpeg)
-![7] (files/7.jpeg)
+![7] (files/7.png)
 
 #### Requirement
 In order to run **Avision mission planner** on your device, the latest version of **3DR Services** must be installed.
