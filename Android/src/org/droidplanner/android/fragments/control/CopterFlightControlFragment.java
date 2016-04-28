@@ -562,9 +562,7 @@ public class CopterFlightControlFragment extends BaseFlightControlFragment imple
                         .setPositiveButton("Got it!", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                if (weatherInfo.getPermission()) {
-                                    getArmingConfirmation();
-                                }
+                                getArmingConfirmation();
                                 dialogInterface.dismiss();
                             }
                         })
