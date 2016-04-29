@@ -20,7 +20,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.gson.Gson;
 import com.o3dr.android.client.Drone;
 import com.o3dr.services.android.lib.coordinate.LatLong;
 import com.o3dr.services.android.lib.coordinate.LatLongAlt;
@@ -88,6 +87,7 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
 
     private boolean needRebuildPath = true;
     private boolean needRestrictedZone = true;
+    private boolean isPathRebuilt = false;
 
     static {
         eventFilter.addAction(MissionProxy.ACTION_MISSION_PROXY_UPDATE);
@@ -114,7 +114,7 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
                     if (drone.isConnected() && needRebuildPath) {
                         updateMissionPoints();
                     }
-                    if (drone.isConnected() && needRestrictedZone){
+                    if (drone.isConnected() && needRestrictedZone) {
                         Gps gps = drone.getAttribute(AttributeType.GPS);
                         DroidPlannerApp.getApp(EditorActivity.this).getNet().
                                 getRestrictedArea(new LatLng(gps.getPosition().getLatitude(),
@@ -608,11 +608,13 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
     public void onItemClick(MissionItemProxy item, boolean zoomToFit) {
         if (missionProxy == null) return;
 
-        EditorToolsImpl toolImpl = getToolImpl();
-        toolImpl.onListItemClick(item);
+        if (isPathRebuilt) {
+            EditorToolsImpl toolImpl = getToolImpl();
+            toolImpl.onListItemClick(item);
 
-        if (zoomToFit) {
-            zoomToFitSelected();
+            if (zoomToFit) {
+                zoomToFitSelected();
+            }
         }
     }
 
@@ -671,10 +673,6 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
 
                 missionProxy.getCurrentMission().clear();
                 for (int i = 0; i < path.getPassedPoints().size(); i++) {
-//                    points.add(new LatLong(path.getPassedPoints().get(i).getLatitude(),
-//                            path.getPassedPoints().get(i).getLongitude()));
-//                    gestureMapFragment.getMapFragment().addFlightPathPoint(new LatLong(path.getPassedPoints().get(i).getLatitude(),
-//                            path.getPassedPoints().get(i).getLongitude()));
 
                     BaseSpatialItem item = new Waypoint();
                     item.setCoordinate(new LatLongAlt(path.getPassedPoints().get(i).getLatitude(),
@@ -688,45 +686,12 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
                             path.getPassedPoints().get(i).getLongitude()));
                 }
                 needRebuildPath = false;
-//                gestureMapFragment.getMapFragment().projectPathIntoMap(points);
-//                EditorToolsImpl toolImpl = getToolImpl();
-//                toolImpl.onPathFinished(points);
-
-
+                isPathRebuilt = true;
                 break;
             case Net.RESTRICTED_AREA:
                 needRestrictedZone = false;
-
                 RestrictedArea area = (RestrictedArea) netObject;
                 Toast.makeText(this, "Restricted area - success!", Toast.LENGTH_LONG).show();
-
-//                String s = "{\"restricted\": [\n" +
-//                        "  {\n" +
-//                        "    \"name\": \"test1\",\n" +
-//                        "    \"radius\": 100.0,\n" +
-//                        "    \"lat\": 50.45231,\n" +
-//                        "    \"lng\": 30.46672,\n" +
-//                        "    \"id\": \"1531304378436157440\"\n" +
-//                        "  },\n" +
-//                        "  {\n" +
-//                        "    \"name\": \"test2\",\n" +
-//                        "    \"radius\": 100.0,\n" +
-//                        "    \"lat\": 50.69994,\n" +
-//                        "    \"lng\": 31.39069,\n" +
-//                        "    \"id\": \"1531304378447691776\"\n" +
-//                        "  }\n" +
-//                        "], \"geofencing\": [\n" +
-//                        "  {\n" +
-//                        "    \"name\": \"test3\",\n" +
-//                        "    \"simplePointList\": [],\n" +
-//                        "    \"lat\": 50.45231,\n" +
-//                        "    \"lng\": 30.46672,\n" +
-//                        "    \"id\": \"1531304378450837504\"\n" +
-//                        "  }\n" +
-//                        "] }";
-//
-//                Gson gson = new Gson();
-//                area = gson.fromJson(s, RestrictedArea.class);
                 gestureMapFragment.getMapFragment().addRestrictedAreas(area);
                 break;
         }

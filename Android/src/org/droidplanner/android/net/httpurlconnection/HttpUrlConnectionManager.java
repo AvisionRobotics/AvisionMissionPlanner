@@ -9,18 +9,14 @@ import org.droidplanner.android.DroidPlannerApp;
 import org.droidplanner.android.core.api.App;
 import org.droidplanner.android.core.api.Net;
 import org.droidplanner.android.core.observer.NetSubscriber;
-import org.droidplanner.android.net.httpurlconnection.get.GetPosts;
 import org.droidplanner.android.net.httpurlconnection.get.GetWeather;
-import org.droidplanner.android.net.httpurlconnection.post.Login;
 import org.droidplanner.android.net.httpurlconnection.put.Restricted;
 import org.droidplanner.android.net.httpurlconnection.put.RouteByCoord;
 import org.droidplanner.android.net.httpurlconnection.put.RouteByID;
 import org.droidplanner.android.net.model.NetError;
 import org.droidplanner.android.net.model.Path;
-import org.droidplanner.android.net.model.Post;
 import org.droidplanner.android.net.model.RestrictedArea;
 import org.droidplanner.android.net.model.ServerPoint;
-import org.droidplanner.android.net.model.User;
 import org.droidplanner.android.net.model.WeatherInfo;
 
 import java.util.ArrayList;
@@ -67,40 +63,6 @@ public class HttpUrlConnectionManager implements Net {
         for (NetSubscriber observer : observers) {
             observer.onNetRequestError(eventId, (NetError) object);
         }
-    }
-
-    @Override
-    public void login(@NonNull User user) {
-        Login login = new Login(user);
-        login.setCallback(new HttpRequest.Callback<User>() {
-            @Override
-            public void onLoadFinish(User response, int statusCode) {
-                notifySuccessSubscribers(LOG_IN, response);
-            }
-
-            @Override
-            public void onLoadError(NetError netError) {
-                notifyErrorSubscribers(LOG_IN, netError);
-            }
-        });
-        executor.execute(login);
-    }
-
-    @Override
-    public void getPosts() {
-        GetPosts getPosts = new GetPosts();
-        getPosts.setCallback(new HttpRequest.Callback<List<Post>>() {
-            @Override
-            public void onLoadFinish(List<Post> response, int statusCode) {
-                notifySuccessSubscribers(GET_POSTS, response);
-            }
-
-            @Override
-            public void onLoadError(NetError netError) {
-                notifyErrorSubscribers(GET_POSTS, netError);
-            }
-        });
-        executor.execute(getPosts);
     }
 
     @Override
