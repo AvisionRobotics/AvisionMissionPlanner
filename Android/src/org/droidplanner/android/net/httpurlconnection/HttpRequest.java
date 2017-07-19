@@ -6,10 +6,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.StringDef;
 import android.support.annotation.UiThread;
 import android.support.v4.util.ArrayMap;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
 
+import org.droidplanner.android.DroidPlannerApp;
 import org.droidplanner.android.net.model.NetError;
 import org.droidplanner.android.utils.IOUtils;
 
@@ -63,6 +65,8 @@ public abstract class HttpRequest<C> implements Runnable {
     }
 
     protected void executeRequest() {
+        addHeader("Content-Type", "application/json");
+
 //        try {
 //
 //            KeyStore keyStore =...;
@@ -100,15 +104,23 @@ public abstract class HttpRequest<C> implements Runnable {
             urlConnection.setDoOutput(posting);
             urlConnection.setDoInput(true);
             urlConnection.setRequestMethod(httpMethod);
-//            setHeaders(urlConnection);
             if (posting) {
+                setHeaders(urlConnection);
+
                 OutputStream outputStream = urlConnection.getOutputStream();
                 IOUtils.writeToStream(outputStream, body);
             }
+
+            Log.d("---> " + httpMethod, endpoint + " \n " + body);
+
             urlConnection.connect();
             statusCode = urlConnection.getResponseCode();
-            Log.d(TAG, endpoint + String.valueOf(statusCode));
+            Log.d(TAG, endpoint + "\t" + String.valueOf(statusCode));
+
+            extractCookie(urlConnection);
+
             String response = IOUtils.convertStreamToString(urlConnection.getInputStream());
+            Log.d(TAG, response);
             response(response, urlConnection.getResponseCode());
         } catch (final Exception exception) {
             String errorMessage = null;
@@ -138,8 +150,10 @@ public abstract class HttpRequest<C> implements Runnable {
     }
 
     private void setHeaders(HttpURLConnection urlConnection) {
+        Log.d("Headers:", "***");
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
+            Log.d("--->", entry.getKey() + " : " + entry.getValue());
         }
     }
 
@@ -149,6 +163,15 @@ public abstract class HttpRequest<C> implements Runnable {
 
     protected void setBody(String body) {
         this.body = body;
+    }
+
+    protected void extractCookie(HttpURLConnection urlConnection) {
+        if (!TextUtils.isEmpty(urlConnection.getHeaderField("Set-Cookie"))) {
+//            String s = urlConnection.getHeaderField("Set-Cookie").split("=")[1].split(";")[0];
+            String s = urlConnection.getHeaderField("Set-Cookie").split(";")[0];
+//            String s = urlConnection.getHeaderField("Set-Cookie");
+            DroidPlannerApp.getInstance().setToken(s);
+        }
     }
 
     protected final void notifyError(final NetError error) {

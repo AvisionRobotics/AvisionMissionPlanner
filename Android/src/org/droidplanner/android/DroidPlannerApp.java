@@ -89,6 +89,8 @@ public class DroidPlannerApp extends MultiDexApplication implements DroneListene
 
     private Net net;
     private Executor executor;
+    private static DroidPlannerApp sInstance;
+    private String token;
 
     @Override
     public void onTowerConnected() {
@@ -147,7 +149,7 @@ public class DroidPlannerApp extends MultiDexApplication implements DroneListene
     @Override
     public void onCreate() {
         super.onCreate();
-
+        sInstance = this;
         final Context context = getApplicationContext();
 
         executor = Executors.newFixedThreadPool(2);
@@ -437,4 +439,17 @@ public class DroidPlannerApp extends MultiDexApplication implements DroneListene
     public static App getApp(Context context) {
         return (App) context.getApplicationContext();
     }
+
+    public static DroidPlannerApp getInstance() {
+        return sInstance;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
 }

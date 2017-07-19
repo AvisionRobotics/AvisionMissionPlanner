@@ -10,6 +10,7 @@ import org.droidplanner.android.core.api.App;
 import org.droidplanner.android.core.api.Net;
 import org.droidplanner.android.core.observer.NetSubscriber;
 import org.droidplanner.android.net.httpurlconnection.get.GetWeather;
+import org.droidplanner.android.net.httpurlconnection.post.Login;
 import org.droidplanner.android.net.httpurlconnection.put.Restricted;
 import org.droidplanner.android.net.httpurlconnection.put.RouteByCoord;
 import org.droidplanner.android.net.httpurlconnection.put.RouteByID;
@@ -133,5 +134,22 @@ public class HttpUrlConnectionManager implements Net {
             }
         });
         executor.execute(getWeather);
+    }
+
+    @Override
+    public void login() {
+        Login login = new Login();
+        login.setCallback(new HttpRequest.Callback<Object>() {
+            @Override
+            public void onLoadFinish(Object response, int statusCode) {
+                notifySuccessSubscribers(LOGIN, response);
+            }
+
+            @Override
+            public void onLoadError(NetError netError) {
+                notifyErrorSubscribers(LOGIN, netError);
+            }
+        });
+        executor.execute(login);
     }
 }

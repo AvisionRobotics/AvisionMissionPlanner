@@ -1,5 +1,7 @@
 package org.droidplanner.android.net.model;
 
+import android.util.Log;
+
 import com.google.gson.annotations.SerializedName;
 import com.o3dr.services.android.lib.drone.mission.item.MissionItem;
 
@@ -24,7 +26,7 @@ public class ServerPoint {
 
     public static ServerPoint toServerModel(MissionItem missionItem){
      ServerPoint serverPoint = new ServerPoint();
-        serverPoint.setCn(missionItem.getType().getLabel());
+        serverPoint.setCn(missionItem.getType().getLabel().toUpperCase());
         serverPoint.setLatitude(((MissionItem.SpatialItem)missionItem).getCoordinate().getLatitude());
         serverPoint.setLongitude(((MissionItem.SpatialItem)missionItem).getCoordinate().getLongitude());
         serverPoint.setAltitude(((MissionItem.SpatialItem)missionItem).getCoordinate().getAltitude());

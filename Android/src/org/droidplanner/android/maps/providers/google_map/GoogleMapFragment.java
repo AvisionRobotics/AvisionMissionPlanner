@@ -443,14 +443,32 @@ public class GoogleMapFragment extends SupportMapFragment implements DPMap, Goog
     }
 
     @Override
+    public void addMarker(LatLng mDroneLocation) {
+        final MarkerOptions options = new MarkerOptions()
+                .position(mDroneLocation)
+                .draggable(false)
+                .flat(true)
+                .visible(true)
+                .anchor(0.5f, 0.5f)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.user_location));
+
+        getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap googleMap) {
+                userMarker = googleMap.addMarker(options);
+            }
+        });
+    }
+
+    @Override
     public void addFlightPathPoint(LatLong coord) {
         final LatLng position = DroneHelper.CoordToLatLang(coord);
 
         PolylineOptions flightPathOptions = new PolylineOptions();
-                flightPathOptions.color(MISSION_PATH_DEFAULT_COLOR)
-                        .width(1f).zIndex(1);
-        if (flightPath==null)
-               flightPath = getMap().addPolyline(flightPathOptions);
+        flightPathOptions.color(MISSION_PATH_DEFAULT_COLOR)
+                .width(1f).zIndex(1);
+        if (flightPath == null)
+            flightPath = getMap().addPolyline(flightPathOptions);
 
         flightPath.getPoints().add(position);
 
@@ -845,6 +863,12 @@ public class GoogleMapFragment extends SupportMapFragment implements DPMap, Goog
         final float currentZoomLevel = getMap().getCameraPosition().zoom;
         final LatLong droneLocation = gps.getPosition();
         updateCamera(droneLocation, (int) currentZoomLevel);
+    }
+
+    @Override
+    public void goToDroneLocation(LatLng latLng) {
+        final LatLong droneLocation = new LatLong(latLng.latitude, latLng.longitude);
+        updateCamera(droneLocation, 15);
     }
 
     private void setupMapListeners(GoogleMap googleMap) {

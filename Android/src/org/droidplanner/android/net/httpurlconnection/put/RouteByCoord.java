@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import org.droidplanner.android.DroidPlannerApp;
 import org.droidplanner.android.net.httpurlconnection.HttpRequest;
 import org.droidplanner.android.net.httpurlconnection.meta.Url;
 import org.droidplanner.android.net.model.Path;
@@ -18,6 +19,7 @@ public class RouteByCoord extends HttpRequest<Path> {
 
     public RouteByCoord(List<ServerPoint> pointList, LatLng latLng) {
         super(String.format(Url.CALCULATE_ROUTE_BY_COORDINATES, latLng.latitude, latLng.longitude));
+        addHeader("Cookie", DroidPlannerApp.getInstance().getToken());
         setBody(gson.toJson(pointList));
     }
 

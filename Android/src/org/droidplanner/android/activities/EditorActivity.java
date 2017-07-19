@@ -5,9 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Pair;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -32,6 +34,7 @@ import com.o3dr.services.android.lib.drone.mission.item.spatial.Waypoint;
 import com.o3dr.services.android.lib.drone.property.Gps;
 
 import org.beyene.sius.unit.length.LengthUnit;
+import org.droidplanner.android.BuildConfig;
 import org.droidplanner.android.DroidPlannerApp;
 import org.droidplanner.android.R;
 import org.droidplanner.android.activities.interfaces.OnEditorInteraction;
@@ -200,6 +203,18 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
 
         gestureMapFragment.setOnPathFinishedListener(this);
         openActionDrawer();
+
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (BuildConfig.DEV) {
+                    mDroneLocation = new LatLng(37.808393, -122.408909); // Pier 39 SF
+                    gestureMapFragment.getMapFragment().goToDroneLocation(mDroneLocation);
+                }
+            }
+        }, 500);
+
     }
 
     @Override
@@ -441,31 +456,60 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
         if (missionProxy != null && !missionProxy.getCurrentMission().getMissionItems().isEmpty()) {
 
 
-            for (MissionItem item : missionProxy.getCurrentMission().getMissionItems()) {
-                points.add(ServerPoint.toServerModel(item));
+            List<MissionItem> items = missionProxy.getCurrentMission().getMissionItems();
+            for (int i = 0; i<items.size(); i++) {
+                ServerPoint serverPoint = ServerPoint.toServerModel(items.get(i));
+
+                if (i==0){
+                    serverPoint.setCn("TAKEOFF");
+                }
+                Log.e("CN", serverPoint.getCn());
+
+                points.add(serverPoint);
             }
 
 //            mDroneLocation = new LatLng(50.003137, 36.272996);
             final Drone drone = dpApp.getDrone();
-            if (!drone.isConnected()) {
-                Toast.makeText(this, "In order to calculate route please connect to drone!", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            final Gps droneGps = drone.getAttribute(AttributeType.GPS);
-            if (droneGps != null && droneGps.isValid()) {
-                mDroneLocation = new LatLng(droneGps.getPosition().getLatitude(),
-                        droneGps.getPosition().getLongitude());
-            }
-            if (mDroneLocation != null) {
-                DroidPlannerApp.getApp(this).getNet().calculateRoute(points, mDroneLocation);
-                needRebuildPath = false;
+            if (BuildConfig.DEV) {
+                recalculateRouteDebug(drone, points);
             } else {
-                Toast.makeText(this, "In order to calculate route please connect to drone!", Toast.LENGTH_LONG).show();
+                recalculateRouteProd(drone, points);
             }
 
-            missionProxy.getCurrentMission().getMissionItems();
         }
+    }
+
+    private void recalculateRouteDebug(Drone drone, List<ServerPoint> points) {
+        gestureMapFragment.getMapFragment().goToDroneLocation();
+
+//        DroidPlannerApp.getApp(this).getNet().calculateRoute(points, mDroneLocation);
+        DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1573342362099253248");
+        needRebuildPath = false;
+
+        Toast.makeText(this, "Calculating route in debug mode...", Toast.LENGTH_LONG).show();
+
+    }
+
+    private void recalculateRouteProd(Drone drone, List<ServerPoint> points) {
+        if (!drone.isConnected()) {
+            Toast.makeText(this, "In order to calculate route please connect to drone!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        final Gps droneGps = drone.getAttribute(AttributeType.GPS);
+        if (droneGps != null && droneGps.isValid()) {
+            mDroneLocation = new LatLng(droneGps.getPosition().getLatitude(),
+                    droneGps.getPosition().getLongitude());
+        }
+        if (mDroneLocation != null) {
+//            DroidPlannerApp.getApp(this).getNet().calculateRoute(points, mDroneLocation);
+            DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1573342362099253248");
+            needRebuildPath = false;
+        } else {
+            Toast.makeText(this, "In order to calculate route please connect to drone!", Toast.LENGTH_LONG).show();
+        }
+
+        missionProxy.getCurrentMission().getMissionItems();
     }
 
     @Override

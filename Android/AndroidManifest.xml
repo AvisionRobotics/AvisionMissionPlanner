@@ -54,7 +54,7 @@
         <!-- You must insert your own Google Maps for Android API v2 key in here. -->
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
-            android:value="AIzaSyCDGTFhwdRUzI7eM-vlDXnsBnmuo667LPo" />
+            android:value="AIzaSyBj1At4nqSlJ1jN_g58LAOVoP_bFnfVTG0" />
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -69,7 +69,7 @@
             android:launchMode="singleTop" />
 
         <activity
-            android:name=".activities.FlightActivity"
+            android:name=".activities.SplashActivity"
             android:launchMode="singleTask"
             android:theme="@style/CustomActionBarTheme.Transparent">
 
@@ -96,6 +96,11 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activities.FlightActivity"
+            android:label="@string/menu_drone_setup"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activities.ConfigurationActivity"
             android:label="@string/menu_drone_setup"
