@@ -7,6 +7,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.o3dr.services.android.lib.drone.connection.ConnectionType;
 
 import org.droidplanner.android.fragments.widget.TowerWidgets;
@@ -28,6 +29,16 @@ import java.util.Map;
  * development.
  */
 public class DroidPlannerPrefs {
+
+    public static final String AVISION_PREF_DRONE_ID = "avision_pref_drone_id";
+    public static final String DEFAULT_DRONE_ID = "1573342362099253248";
+
+    public static final String AVISION_PREF_DRONE_LAT = "avision_pref_drone_latitude";
+    public static final String DEFAULT_DRONE_LAT = "37.8068";
+
+    public static final String AVISION_PREF_DRONE_LONG = "avision_pref_drone_longitude";
+    public static final String DEFAULT_DRONE_LONG = "-122.410741";
+
 
     /*
      * Default preference value
@@ -170,6 +181,23 @@ public class DroidPlannerPrefs {
     public DroidPlannerPrefs(Context context) {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         lbm = LocalBroadcastManager.getInstance(context);
+    }
+
+
+//    AVISION
+
+    public String getDroneID() {
+        return prefs.getString(AVISION_PREF_DRONE_ID, DEFAULT_DRONE_ID).trim();
+    }
+
+    public void setDroneID(String id) {
+        prefs.edit().putString(AVISION_PREF_DRONE_ID, id.trim()).apply();
+    }
+
+    public LatLng getDroneLocation() {
+        String lat = prefs.getString(AVISION_PREF_DRONE_LAT, DEFAULT_DRONE_LAT);
+        String lng = prefs.getString(AVISION_PREF_DRONE_LONG, DEFAULT_DRONE_LONG);
+        return new LatLng(Double.parseDouble(lat), Double.parseDouble(lng));
     }
 
     public boolean isLiveUploadEnabled() {
@@ -467,7 +495,7 @@ public class DroidPlannerPrefs {
         return prefs.getBoolean(PREF_IS_TTS_ENABLED, DEFAULT_TTS_ENABLED);
     }
 
-    public void enableWidget(TowerWidgets widget, boolean enable){
+    public void enableWidget(TowerWidgets widget, boolean enable) {
         prefs.edit().putBoolean(widget.getPrefKey(), enable).apply();
     }
 
@@ -484,33 +512,33 @@ public class DroidPlannerPrefs {
         lbm.sendBroadcast(new Intent(ACTION_PREF_RETURN_TO_ME_UPDATED).putExtra(PREF_RETURN_TO_ME, isEnabled));
     }
 
-    public boolean getWarningOnVehicleHomeUpdate(){
+    public boolean getWarningOnVehicleHomeUpdate() {
         return prefs.getBoolean(PREF_VEHICLE_HOME_UPDATE_WARNING, DEFAULT_VEHICLE_HOME_UPDATE_WARNING);
     }
 
-    public void setVideoWidgetType(@WidgetVideoPreferences.VideoType int videoType){
+    public void setVideoWidgetType(@WidgetVideoPreferences.VideoType int videoType) {
         prefs.edit().putInt(PREF_WIDGET_VIDEO_TYPE, videoType).apply();
     }
 
     @WidgetVideoPreferences.VideoType
-    public int getVideoWidgetType(){
+    public int getVideoWidgetType() {
         @WidgetVideoPreferences.VideoType final int videoType = prefs.getInt(PREF_WIDGET_VIDEO_TYPE, WidgetVideoPreferences.SOLO_VIDEO_TYPE);
         return videoType;
     }
 
-    public void setCustomVideoUdpPort(int udpPort){
+    public void setCustomVideoUdpPort(int udpPort) {
         prefs.edit().putInt(PREF_CUSTOM_VIDEO_UDP_PORT, udpPort).apply();
     }
 
-    public int getCustomVideoUdpPort(){
+    public int getCustomVideoUdpPort() {
         return prefs.getInt(PREF_CUSTOM_VIDEO_UDP_PORT, -1);
     }
 
-    public void setUVCVideoAspectRatio(Float aspectRatio){
+    public void setUVCVideoAspectRatio(Float aspectRatio) {
         prefs.edit().putFloat(PREF_UVC_VIDEO_ASPECT_RATIO, aspectRatio).apply();
     }
 
-    public Float getUVCVideoAspectRatio(){
+    public Float getUVCVideoAspectRatio() {
         return prefs.getFloat(PREF_UVC_VIDEO_ASPECT_RATIO, DEFAULT_UVC_VIDEO_ASPECT_RATIO);
     }
 }

@@ -62,6 +62,7 @@ import org.droidplanner.android.utils.analytics.GAUtils;
 import org.droidplanner.android.utils.file.FileStream;
 import org.droidplanner.android.utils.file.IO.MissionReader;
 import org.droidplanner.android.utils.prefs.AutoPanMode;
+import org.droidplanner.android.utils.prefs.DroidPlannerPrefs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -209,7 +210,9 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
             @Override
             public void run() {
                 if (BuildConfig.DEV) {
-                    mDroneLocation = new LatLng(37.808393, -122.408909); // Pier 39 SF
+
+//                    mDroneLocation = new LatLng(37.8068, -122.410741); // Pier 39 SF
+                    mDroneLocation = new DroidPlannerPrefs(EditorActivity.this).getDroneLocation();// Pier 39 SF
                     gestureMapFragment.getMapFragment().goToDroneLocation(mDroneLocation);
                 }
             }
@@ -455,16 +458,17 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
 
         if (missionProxy != null && !missionProxy.getCurrentMission().getMissionItems().isEmpty()) {
 
+            ServerPoint firstPoint = new ServerPoint();
+            firstPoint.setCn("TAKEOFF");
+            firstPoint.setLatitude(mDroneLocation.latitude);
+            firstPoint.setLongitude(mDroneLocation.longitude);
+            firstPoint.setAltitude(0);
+            points.add(firstPoint);
 
             List<MissionItem> items = missionProxy.getCurrentMission().getMissionItems();
-            for (int i = 0; i<items.size(); i++) {
+            for (int i = 0; i < items.size(); i++) {
                 ServerPoint serverPoint = ServerPoint.toServerModel(items.get(i));
-
-                if (i==0){
-                    serverPoint.setCn("TAKEOFF");
-                }
                 Log.e("CN", serverPoint.getCn());
-
                 points.add(serverPoint);
             }
 
@@ -483,7 +487,9 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
         gestureMapFragment.getMapFragment().goToDroneLocation();
 
 //        DroidPlannerApp.getApp(this).getNet().calculateRoute(points, mDroneLocation);
-        DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1573342362099253248");
+//        DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1573342362099253248");
+        DroidPlannerApp.getApp(this).getNet().calculateRoute(points,
+                new DroidPlannerPrefs(EditorActivity.this).getDroneID());
         needRebuildPath = false;
 
         Toast.makeText(this, "Calculating route in debug mode...", Toast.LENGTH_LONG).show();
@@ -503,7 +509,9 @@ public class EditorActivity extends DrawerNavigationUI implements OnPathFinished
         }
         if (mDroneLocation != null) {
 //            DroidPlannerApp.getApp(this).getNet().calculateRoute(points, mDroneLocation);
-            DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1573342362099253248");
+//            DroidPlannerApp.getApp(this).getNet().calculateRoute(points, "1573342362099253248");
+            DroidPlannerApp.getApp(this).getNet().calculateRoute(points,
+                    new DroidPlannerPrefs(EditorActivity.this).getDroneID());
             needRebuildPath = false;
         } else {
             Toast.makeText(this, "In order to calculate route please connect to drone!", Toast.LENGTH_LONG).show();

@@ -585,6 +585,9 @@
     <string name="uvc_device">Device</string>
     <string name="uvc_device_refresh">Refresh</string>
     <string name="uvc_device_no_device">No UVC device found</string>
+    <string name="avision_pref_drone_id">Drone ID</string>
+    <string name="avision_pref_drone_latitude">Drone Latitude</string>
+    <string name="avision_pref_drone_longitude">Drone Longitude</string>
 
 
 </resources>

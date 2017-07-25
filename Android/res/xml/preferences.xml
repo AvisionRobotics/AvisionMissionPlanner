@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Contains preferences related to the app. -->
+    <PreferenceCategory android:title="Avision">
+
+        <EditTextPreference
+            android:defaultValue="1573342362099253248"
+            android:gravity="left"
+            android:inputType="number"
+            android:key="avision_pref_drone_id"
+            android:maxLength="1000"
+            android:title="@string/avision_pref_drone_id" />
+        <EditTextPreference
+            android:defaultValue="37.8068"
+            android:gravity="center"
+            android:inputType="text"
+            android:key="avision_pref_drone_latitude"
+            android:title="@string/avision_pref_drone_latitude" />
+        <EditTextPreference
+            android:defaultValue="-122.410741"
+            android:gravity="center"
+            android:inputType="text"
+            android:key="avision_pref_drone_longitude"
+            android:title="@string/avision_pref_drone_longitude" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/pref_connection">
 
         <ListPreference
@@ -98,7 +123,7 @@
             <PreferenceCategory android:title="@string/pref_tower_widgets_category">
                 <Preference
                     android:key="pref_tower_widgets"
-                    android:title="@string/pref_tower_widgets_title"/>
+                    android:title="@string/pref_tower_widgets_title" />
             </PreferenceCategory>
 
             <PreferenceCategory android:title="@string/pref_title_local">
